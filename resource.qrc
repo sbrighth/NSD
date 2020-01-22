@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/json/target_device_info.json</file>
+    </qresource>
+</RCC>

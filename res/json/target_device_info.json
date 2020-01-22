@@ -1,0 +1,33 @@
+{
+    "Nordic Thingy":
+    {
+        "connect mode":["BLE"],
+        "capture source":["Motion", "Audio"],
+        "sampling Rate":
+        {
+            "Motion":[200, 100, 50, 25, 10, 5],
+            "Audio":[16000]
+        },
+        "sensor type":
+        {
+            "Motion":["Accelerometer", "Gyroscope"],
+            "Audio":["Audio"]
+        }
+    },
+
+    "NS NEMo":
+    {
+        "connect mode":["BLE"],
+        "capture source":["Motion", "Audio"],
+        "sampling Rate":
+        {
+            "Motion":[200, 100, 50, 25, 10, 5],
+            "Audio":[16000]
+        },
+        "sensor type":
+        {
+            "Motion":["Accelerometer", "Gyroscope"],
+            "Audio":["Audio"]
+        }
+    }
+}
