@@ -51,27 +51,43 @@
 
 #ifndef SERVICEINFO_H
 #define SERVICEINFO_H
+#include <QList>
 #include <QtBluetooth/QLowEnergyService>
+#include "characteristicinfo.h"
 
 class ServiceInfo: public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsUpdated)
     Q_PROPERTY(QString serviceName READ getName NOTIFY serviceChanged)
     Q_PROPERTY(QString serviceUuid READ getUuid NOTIFY serviceChanged)
     Q_PROPERTY(QString serviceType READ getType NOTIFY serviceChanged)
+
 public:
     ServiceInfo() = default;
     ServiceInfo(QLowEnergyService *service);
+    ~ServiceInfo();
+    QVariant getCharacteristics();
+    CharacteristicInfo *getCharacteristic(QString uuid);
     QLowEnergyService *service() const;
     QString getUuid() const;
     QString getName() const;
     QString getType() const;
 
+    void scanCharacteristics();
+
 Q_SIGNALS:
-    void serviceChanged();
+    void serviceChanged(QString service_uuid);
+    void characteristicsUpdated(QString service_uuid);
+
+private slots:
+    // QLowEnergyService related
+    void serviceDetailsDiscovered(QLowEnergyService::ServiceState newState);
 
 private:
     QLowEnergyService *m_service = nullptr;
+    QList<QObject*> characteristics;
+    QMap<QString, CharacteristicInfo*> characteristics_map;
 };
 
 #endif // SERVICEINFO_H

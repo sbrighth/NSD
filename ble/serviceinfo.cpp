@@ -50,11 +50,29 @@
 ****************************************************************************/
 
 #include "serviceinfo.h"
+#include <QTimer>
 
 ServiceInfo::ServiceInfo(QLowEnergyService *service):
     m_service(service)
 {
     m_service->setParent(this);
+}
+
+ServiceInfo::~ServiceInfo()
+{
+    qDeleteAll(characteristics);
+    characteristics.clear();
+    characteristics_map.clear();
+}
+
+QVariant ServiceInfo::getCharacteristics()
+{
+    return QVariant::fromValue(characteristics);
+}
+
+CharacteristicInfo *ServiceInfo::getCharacteristic(QString uuid)
+{
+    return characteristics_map[uuid];
 }
 
 QLowEnergyService *ServiceInfo::service() const
@@ -105,4 +123,69 @@ QString ServiceInfo::getUuid() const
         return QStringLiteral("0x") + QString::number(result32, 16);
 
     return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+}
+
+
+void ServiceInfo::scanCharacteristics()
+{
+    if (!m_service)
+        return;
+
+    qDeleteAll(characteristics);
+    characteristics.clear();
+    characteristics_map.clear();
+    emit characteristicsUpdated(getUuid());
+
+    if (m_service->state() == QLowEnergyService::DiscoveryRequired) {
+        //! [les-service-3]
+        connect(m_service, &QLowEnergyService::stateChanged,
+                this, &ServiceInfo::serviceDetailsDiscovered);
+        m_service->discoverDetails();
+        //setUpdate("Back\n(Discovering details...)");
+        //! [les-service-3]
+        return;
+    }
+
+    //discovery already done
+    const QList<QLowEnergyCharacteristic> chars = m_service->characteristics();
+    for (const QLowEnergyCharacteristic &ch : chars) {
+        auto cInfo = new CharacteristicInfo(ch);
+        characteristics.append(cInfo);
+        characteristics_map.insert(cInfo->getUuid(), cInfo);
+    }
+
+    //QTimer::singleShot(0, this, &ServiceInfo::characteristicsUpdated);
+    QTimer::singleShot(0, this, SIGNAL(characteristicsUpdated(getUuid())));
+}
+
+void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
+{
+    if (newState != QLowEnergyService::ServiceDiscovered) {
+        // do not hang in "Scanning for characteristics" mode forever
+        // in case the service discovery failed
+        // We have to queue the signal up to give UI time to even enter
+        // the above mode
+        if (newState != QLowEnergyService::DiscoveringServices) {
+            QMetaObject::invokeMethod(this, "characteristicsUpdated",
+                                      Qt::QueuedConnection, Q_ARG(QString, getUuid()));
+        }
+        return;
+    }
+
+    auto service = qobject_cast<QLowEnergyService *>(sender());
+    if (!service)
+        return;
+
+
+
+    //! [les-chars]
+    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
+    for (const QLowEnergyCharacteristic &ch : chars) {
+        auto cInfo = new CharacteristicInfo(ch);
+        characteristics.append(cInfo);
+        characteristics_map.insert(cInfo->getUuid(), cInfo);
+    }
+    //! [les-chars]
+
+    emit characteristicsUpdated(getUuid());
 }

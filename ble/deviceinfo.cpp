@@ -56,6 +56,26 @@
 DeviceInfo::DeviceInfo(const QBluetoothDeviceInfo &d)
 {
     device = d;
+    controller = Q_NULLPTR;
+    connected = false;
+}
+
+DeviceInfo::~DeviceInfo()
+{
+    qDeleteAll(services);
+    services.clear();
+    services_map.clear();
+}
+
+
+QVariant DeviceInfo::getServices()
+{
+    return QVariant::fromValue(services);
+}
+
+ServiceInfo *DeviceInfo::getService(QString uuid)
+{
+    return services_map[uuid];
 }
 
 QString DeviceInfo::getAddress() const
@@ -82,5 +102,146 @@ QBluetoothDeviceInfo DeviceInfo::getDevice()
 void DeviceInfo::setDevice(const QBluetoothDeviceInfo &dev)
 {
     device = QBluetoothDeviceInfo(dev);
-    Q_EMIT deviceChanged();
+}
+
+void DeviceInfo::scanServices()
+{
+    if (!device.isValid()) {
+        qWarning() << "Not a valid device";
+        return;
+    }
+
+    qDeleteAll(services);
+    services.clear();
+    services_map.clear();
+    emit servicesUpdated(getAddress());
+    setUpdate("Connecting to device...");
+
+    if(controller)
+    {
+        controller->disconnectFromDevice();
+        delete controller;
+        controller = nullptr;
+    }
+
+    //! [les-controller-1]
+    if (!controller) {
+        // Connecting signals and slots for connecting to LE services.
+        controller = QLowEnergyController::createCentral(getDevice());
+
+        connect(controller, &QLowEnergyController::connected,
+                this, &DeviceInfo::deviceConnected);
+        connect(controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
+                this, &DeviceInfo::errorReceived);
+        connect(controller, &QLowEnergyController::disconnected,
+                this, &DeviceInfo::deviceDisconnected);
+        connect(controller, &QLowEnergyController::serviceDiscovered,
+                this, &DeviceInfo::addLowEnergyService);
+        connect(controller, &QLowEnergyController::discoveryFinished,
+                this, &DeviceInfo::serviceScanDone);
+    }
+
+    if (randomAddress)
+        controller->setRemoteAddressType(QLowEnergyController::RandomAddress);
+    else
+        controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
+
+    controller->connectToDevice();
+    //! [les-controller-1]
+}
+
+
+void DeviceInfo::disconnectFromDevice()
+{
+    // UI always expects disconnect() signal when calling this signal
+    // TODO what is really needed is to extend state() to a multi value
+    // and thus allowing UI to keep track of controller progress in addition to
+    // device scan progress
+
+    if(controller)
+    {
+        if (controller->state() != QLowEnergyController::UnconnectedState)
+            controller->disconnectFromDevice();
+        else
+            deviceDisconnected();
+    }
+}
+
+QString DeviceInfo::getServiceUpdate()
+{
+    return message;
+}
+
+bool DeviceInfo::hasControllerError() const
+{
+    return (controller && controller->error() != QLowEnergyController::NoError);
+}
+
+bool DeviceInfo::isRandomAddress() const
+{
+    return randomAddress;
+}
+
+void DeviceInfo::setRandomAddress(bool newValue)
+{
+    randomAddress = newValue;
+}
+
+void DeviceInfo::setUpdate(const QString &message)
+{
+    this->message = message;
+    emit servicesUpdateChanged(getAddress());
+}
+
+void DeviceInfo::addLowEnergyService(const QBluetoothUuid &serviceUuid)
+{
+    //! [les-service-1]
+    QLowEnergyService *service = controller->createServiceObject(serviceUuid);
+    if (!service) {
+        qWarning() << "Cannot create service for uuid";
+        return;
+    }
+    //! [les-service-1]
+    auto serv = new ServiceInfo(service);
+    services.append(serv);
+    services_map.insert(serv->getUuid(), serv);
+    connect(serv, SIGNAL(characteristicsUpdated(QString)), this, SLOT(serviceCharacteristicsUpdated(QString)));
+
+    emit servicesUpdated(getAddress());
+}
+
+void DeviceInfo::deviceConnected()
+{
+    setUpdate("Back\n(Discovering services...)");
+    connected = true;
+    //! [les-service-2]
+    controller->discoverServices();
+    //! [les-service-2]
+}
+
+void DeviceInfo::errorReceived(QLowEnergyController::Error /*error*/)
+{
+    qWarning() << "Error: " << controller->errorString();
+    setUpdate(QString("%1").arg(controller->errorString()));
+}
+
+void DeviceInfo::serviceScanDone()
+{
+    setUpdate("Service scan done!");
+    // force UI in case we didn't find anything
+    if (services.isEmpty())
+        emit servicesUpdated(getAddress());
+
+    emit servicesUpdateFinished(getAddress());
+}
+
+void DeviceInfo::serviceCharacteristicsUpdated(QString service_uuid)
+{
+    emit characteristicsUpdated(getAddress(), service_uuid);
+}
+
+void DeviceInfo::deviceDisconnected()
+{
+    qWarning() << "Disconnect from device";
+    emit disconnected(getAddress());
 }

@@ -178,6 +178,13 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QPushButton" name="test_character">
+     <property name="text">
+      <string>characteristic</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

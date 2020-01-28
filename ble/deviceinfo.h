@@ -56,25 +56,66 @@
 #include <qbluetoothdeviceinfo.h>
 #include <qbluetoothaddress.h>
 #include <QList>
+#include <QLowEnergyController>
+#include "serviceinfo.h"
 
 class DeviceInfo: public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
     Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
+    Q_PROPERTY(QString update READ getServiceUpdate WRITE setUpdate NOTIFY servicesUpdateChanged)
+
 public:
     DeviceInfo() = default;
     DeviceInfo(const QBluetoothDeviceInfo &d);
+    ~DeviceInfo();
+    QVariant getServices();
+    ServiceInfo *getService(QString uuid);
     QString getAddress() const;
     QString getName() const;
     QBluetoothDeviceInfo getDevice();
+
     void setDevice(const QBluetoothDeviceInfo &dev);
+    void scanServices();
+    void disconnectFromDevice();
+
+    QString getServiceUpdate();
+    bool hasControllerError() const;
+    bool isRandomAddress() const;
+    void setRandomAddress(bool newValue);
+
+private slots:
+    // QLowEnergyController realted
+    void deviceConnected();
+    void errorReceived(QLowEnergyController::Error);
+    void deviceDisconnected();
+    void addLowEnergyService(const QBluetoothUuid &uuid);
+    void serviceScanDone();
+
+    // ServiceInfo signal
+    void serviceCharacteristicsUpdated(QString service_uuid);
 
 Q_SIGNALS:
-    void deviceChanged();
+    void deviceChanged(QString device_address);
+    void disconnected(QString device_address);
+    void servicesUpdated(QString device_address);
+    void servicesUpdateFinished(QString device_address);
+    void servicesUpdateChanged(QString device_address);
+    void characteristicsUpdated(QString device_address, QString service_uuid);
 
 private:
+    void setUpdate(const QString &message);
+
     QBluetoothDeviceInfo device;
+    QList<QObject*> services;
+    QMap<QString, ServiceInfo *> services_map;
+    QLowEnergyController *controller;
+
+    bool connected;
+    QString message;
+    bool randomAddress;
 };
 
 #endif // DEVICEINFO_H

@@ -115,6 +115,7 @@ void BleServiceViewer::AddCharacteristic(QString service_uuid, QString name, QSt
         character_root->insertChild(CHARACTER_PERMISSION, character_permission);
 
         service_root->addChild(character_root);
+        service_root->setExpanded(true);
     }
 }
 

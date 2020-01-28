@@ -61,7 +61,6 @@ CharacteristicInfo::CharacteristicInfo(const QLowEnergyCharacteristic &character
 void CharacteristicInfo::setCharacteristic(const QLowEnergyCharacteristic &characteristic)
 {
     m_characteristic = characteristic;
-    emit characteristicChanged();
 }
 
 QString CharacteristicInfo::getName() const

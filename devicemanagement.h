@@ -5,7 +5,7 @@
 #include <QStandardItemModel>
 #include "adddevicegroup.h"
 #include "finddevice.h"
-#include "ble/device.h"
+#include "ble/bledevice.h"
 #include "bleserviceviewer.h"
 
 namespace Ui {
@@ -38,12 +38,14 @@ private slots:
 
     //for ble device
     void UpdateBleDeviceList();
-    void UpdateBleServiceList();
-    void UpdateBleCharacteristicList();
     void UpdateBleString();
-    void ChangeRandomAddress();
     void ChangeBleState();
-    void ScanBleChracteristcs();
+
+    void DisconnectBleDevice(QString device_address);
+    void UpdateBleServiceList(QString device_address);
+    void ScanBleChracteristcs(QString device_address);
+
+    void UpdateBleCharacteristicList(QString device_address, QString service_uuid);
 
     //for find device widget
     void DoScan();
@@ -54,6 +56,8 @@ private slots:
     //for ble service view
     void ShowBleServices();
 
+    void TestCharacteristics();
+
 private:
     Ui::DeviceManagement *ui;
 
@@ -61,13 +65,10 @@ private:
     QStandardItemModel *device_list_model;
     AddDeviceGroup *add_device_group;
     FindDevice *find_device;
-    Device *ble_device;
+    BleDevice *ble_device;
     BleServiceViewer *ble_service_viewer;
 
     DeviceGroupItem *item;
-
-    int device_group_cnt;
-    QString temp_uuid;
 };
 
 #endif // DEVICEMANAGEMENT_H

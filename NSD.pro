@@ -17,8 +17,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     adddevicegroup.cpp \
+    ble/bledevice.cpp \
     ble/characteristicinfo.cpp \
-    ble/device.cpp \
     ble/deviceinfo.cpp \
     ble/serviceinfo.cpp \
     bleserviceviewer.cpp \
@@ -29,8 +29,8 @@ SOURCES += \
 
 HEADERS += \
     adddevicegroup.h \
+    ble/bledevice.h \
     ble/characteristicinfo.h \
-    ble/device.h \
     ble/deviceinfo.h \
     ble/serviceinfo.h \
     bleserviceviewer.h \
