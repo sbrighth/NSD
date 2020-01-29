@@ -128,7 +128,7 @@ QString ServiceInfo::getUuid() const
 
 void ServiceInfo::scanCharacteristics()
 {
-    if (!m_service)
+    if (m_service == Q_NULLPTR)
         return;
 
     qDeleteAll(characteristics);
@@ -155,7 +155,9 @@ void ServiceInfo::scanCharacteristics()
     }
 
     //QTimer::singleShot(0, this, &ServiceInfo::characteristicsUpdated);
-    QTimer::singleShot(0, this, SIGNAL(characteristicsUpdated(getUuid())));
+    //QTimer::singleShot(0, this, SIGNAL(characteristicsUpdated(QString)), getUuid());
+    emit characteristicsUpdated(getUuid());
+
 }
 
 void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
@@ -167,7 +169,8 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
         // the above mode
         if (newState != QLowEnergyService::DiscoveringServices) {
             QMetaObject::invokeMethod(this, "characteristicsUpdated",
-                                      Qt::QueuedConnection, Q_ARG(QString, getUuid()));
+                                      Qt::QueuedConnection,
+                                      Q_ARG(QString, getUuid()));
         }
         return;
     }
@@ -175,8 +178,6 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
     auto service = qobject_cast<QLowEnergyService *>(sender());
     if (!service)
         return;
-
-
 
     //! [les-chars]
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();

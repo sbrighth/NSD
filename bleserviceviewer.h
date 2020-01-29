@@ -15,7 +15,7 @@ public:
     void AddService(QString name, QString uuid, QString type);
     void RemoveService(bool all=false);
     void AddCharacteristic(QString service_uuid, QString name, QString uuid, QString value, QString handle, QString permission);
-    void RemoveCharacteristic(QString service_uuid, bool all=false);
+    void RemoveCharacteristic(QString service_uuid);
 
 public:
     QTreeWidget *ble_service_tree;

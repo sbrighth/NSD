@@ -71,7 +71,7 @@ class BleDevice: public QObject
     Q_PROPERTY(QVariant devicesList READ getDevices NOTIFY devicesUpdated)
     Q_PROPERTY(QString update READ getUpdate WRITE setUpdate NOTIFY updateChanged)
 public:
-    BleDevice();
+    BleDevice(QString adapter_address=Q_NULLPTR);
     ~BleDevice();
     QVariant getDevices();
     DeviceInfo *getDevice(QString address);

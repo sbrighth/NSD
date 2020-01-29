@@ -61,10 +61,10 @@
 #include <QMetaEnum>
 #include <QTimer>
 
-BleDevice::BleDevice()
+BleDevice::BleDevice(QString adapter_address)
 {
     //! [les-devicediscovery-1]
-    discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress(adapter_address));
     discoveryAgent->setLowEnergyDiscoveryTimeout(5000);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &BleDevice::addDevice);
@@ -75,6 +75,7 @@ BleDevice::BleDevice()
     //! [les-devicediscovery-1]
 
     setUpdate("Search");
+    qDebug() << "devicea adapter " << discoveryAgent->error();
  }
 
 BleDevice::~BleDevice()

@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QStandardItemModel>
+#include <QTimer>
+#include <QEventLoop>
 #include "adddevicegroup.h"
 #include "finddevice.h"
 #include "ble/bledevice.h"
@@ -43,7 +45,7 @@ private slots:
 
     void DisconnectBleDevice(QString device_address);
     void UpdateBleServiceList(QString device_address);
-    void ScanBleChracteristcs(QString device_address);
+    void SortBleServiceList(QString device_address);
 
     void UpdateBleCharacteristicList(QString device_address, QString service_uuid);
 
@@ -55,8 +57,7 @@ private slots:
 
     //for ble service view
     void ShowBleServices();
-
-    void TestCharacteristics();
+    void ScanBleCharacteristics();
 
 private:
     Ui::DeviceManagement *ui;

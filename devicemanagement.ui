@@ -179,9 +179,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="test_character">
+    <widget class="QPushButton" name="scan_ble_characteristics">
      <property name="text">
-      <string>characteristic</string>
+      <string>scan BLE characteristic</string>
      </property>
     </widget>
    </item>

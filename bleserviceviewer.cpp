@@ -13,8 +13,8 @@ BleServiceViewer::BleServiceViewer(QWidget *parent) : QWidget(parent)
     ble_service_tree->setHeaderLabels(tree_header);
 
     ble_service_tree->setColumnWidth(COLUMN_NUM, 15);
-    ble_service_tree->setColumnWidth(COLUMN_SERVICE, 30);
-    ble_service_tree->setColumnWidth(COLUMN_VALUE, 30);
+    ble_service_tree->setColumnWidth(COLUMN_SERVICE, 80);
+    ble_service_tree->setColumnWidth(COLUMN_SERVICE, 80);
 
     QHBoxLayout *layout = new QHBoxLayout;
     layout->addWidget(ble_service_tree);
@@ -115,34 +115,23 @@ void BleServiceViewer::AddCharacteristic(QString service_uuid, QString name, QSt
         character_root->insertChild(CHARACTER_PERMISSION, character_permission);
 
         service_root->addChild(character_root);
-        service_root->setExpanded(true);
+        character_root->setExpanded(false);
     }
 }
 
-void BleServiceViewer::RemoveCharacteristic(QString service_uuid, bool all)
+void BleServiceViewer::RemoveCharacteristic(QString service_uuid)
 {
-    /*
     int service_cnt = ble_service_tree->topLevelItemCount();
 
     for(int service_idx=0; service_idx<service_cnt; service_idx++)
     {
         QTreeWidgetItem *service_root = ble_service_tree->topLevelItem(service_idx);
-        if(service_root->child(2)->text(1) != service_uuid)      //uuid
+        if(service_root->child(SERVICE_UUID)->text(COLUMN_VALUE) != service_uuid)      //uuid
             continue;
 
-        if(all)
-        {
-            int service_cnt = ble_service_tree->topLevelItemCount();
-            for(int service_idx = service_cnt-1; service_idx >= 0; service_idx--)
-                ble_service_tree->takeTopLevelItem(service_idx);
-        }
-        else
-        {
-            QTreeWidgetItem *current_service = ble_service_tree->currentItem();
-            ble_service_tree->removeItemWidget(current_service, 0);
-        }
+        for(int character_idx=service_root->childCount()-1; character_idx>=SERVICE_CHARACTER; character_idx--)
+            service_root->takeChild(character_idx);
     }
-    */
 }
 
 void BleServiceViewer::SortService()
