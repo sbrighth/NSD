@@ -2,6 +2,7 @@
 #include "ui_devicemanagement.h"
 #include "ble/bledevice.h"
 #include <QDebug>
+#include <QProcess>
 
 DeviceManagement::DeviceManagement(QWidget *parent) :
     QWidget(parent),
@@ -56,7 +57,7 @@ DeviceManagement::DeviceManagement(QWidget *parent) :
 
     // find device
     find_device = new FindDevice(this);
-    connect(find_device, SIGNAL(SignalDoScan()), this, SLOT(DoScan()));
+    connect(find_device, SIGNAL(SignalDoScan()), this, SLOT(DoDeviceScan()));
     connect(find_device, SIGNAL(SignalSelectDevice(QModelIndexList)), this, SLOT(SelectDevice(QModelIndexList)));
 
     // ble service viewer
@@ -107,8 +108,11 @@ void DeviceManagement::ConnectDevice()
     int row_index = ui->device_list->currentIndex().row();
     QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
 
+    if(address.isEmpty())
+        return;
+
     if(GetCurrentDeviceGroupConnectMode() == "BLE")
-        ble_device->getDevice(address)->scanServices();
+        ble_device->connectDevice(address);
 }
 
 void DeviceManagement::DisconnectDevice()
@@ -116,8 +120,11 @@ void DeviceManagement::DisconnectDevice()
     int row_index = ui->device_list->currentIndex().row();
     QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
 
+    if(address.isEmpty())
+        return;
+
     if(GetCurrentDeviceGroupConnectMode() == "BLE")
-        ble_device->getDevice(address)->disconnectFromDevice();
+        ble_device->disconnectDevice(address);
 }
 
 void DeviceManagement::RemoveDevice()
@@ -145,15 +152,9 @@ void DeviceManagement::ScanBleCharacteristics()
 {
     int row_index = ui->device_list->currentIndex().row();
     QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
+    QProcess::execute("CLS");
 
-    DeviceInfo *device = ble_device->getDevice(address);
-    QList<QObject*> services = device->getServices().value<QList<QObject*>>();
-
-    foreach(QObject* obj, services)
-    {
-        ServiceInfo *service = qobject_cast<ServiceInfo *>(obj);
-        service->scanCharacteristics();
-    }
+    ble_device->scanCharacteristics(address);
 }
 
 void DeviceManagement::UpdateDeviceGroup(DeviceGroupItem* device_group_item)
@@ -280,15 +281,13 @@ void DeviceManagement::UpdateBleCharacteristicList(QString device_address, QStri
     ServiceInfo *service = device->getService(service_uuid);
     QList<QObject*> characteristics = service->getCharacteristics().value<QList<QObject*>>();
 
-    foreach(QObject *obj, characteristics)
+    foreach(auto *cobj, characteristics)
     {
-        CharacteristicInfo *characteristic = qobject_cast<CharacteristicInfo *>(obj);
+        CharacteristicInfo *characteristic = qobject_cast<CharacteristicInfo *>(cobj);
+        QList<QObject*> descriptors = characteristic->getDescriptors().value<QList<QObject*>>();
 
-        ble_service_viewer->AddCharacteristic(service->getUuid(), characteristic->getName(),
-                                                    characteristic->getUuid(),
-                                                    characteristic->getValue(),
-                                                    characteristic->getHandle(),
-                                                    characteristic->getPermission());
+        ble_service_viewer->AddCharacteristic(service->getUuid(),
+                                              characteristic->getName(), characteristic->getUuid(), characteristic->getValue(), characteristic->getHandle(), characteristic->getPermission());
 
         qDebug() << "-------" << endl;
         qDebug() << "characteristic name : " << characteristic->getName();
@@ -296,10 +295,25 @@ void DeviceManagement::UpdateBleCharacteristicList(QString device_address, QStri
         qDebug() << "characteristic value : " << characteristic->getValue();
         qDebug() << "characteristic handle : " << characteristic->getHandle();
         qDebug() << "characteristic permission : " << characteristic->getPermission();
+
+
+        for(auto dobj : descriptors)
+        {
+            DescriptorInfo *descriptor = qobject_cast<DescriptorInfo *>(dobj);
+            ble_service_viewer->AddDescriptor(service->getUuid(), characteristic->getUuid(),
+                                              descriptor->getName(), descriptor->getType(), descriptor->getUuid(), descriptor->getValue());
+
+            qDebug() << "-------" << endl;
+            qDebug() << "descriptor name : " << descriptor->getName();
+            qDebug() << "descriptor type : " << descriptor->getType();
+            qDebug() << "descriptor uuid : " << descriptor->getUuid();
+            qDebug() << "descriptor value : " << descriptor->getValue();
+            qDebug() << "descriptor handle : " << descriptor->getHandle();
+        }
     }
 }
 
-void DeviceManagement::DoScan()
+void DeviceManagement::DoDeviceScan()
 {
     if(GetCurrentDeviceGroupConnectMode() == "BLE")
         ble_device->startDeviceDiscovery();

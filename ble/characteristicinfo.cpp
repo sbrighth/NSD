@@ -56,30 +56,25 @@
 CharacteristicInfo::CharacteristicInfo(const QLowEnergyCharacteristic &characteristic):
     m_characteristic(characteristic)
 {
+    const QList<QLowEnergyDescriptor> descs = m_characteristic.descriptors();
+    for (const QLowEnergyDescriptor &desc : descs)
+    {
+        auto cInfo = new DescriptorInfo(desc);
+        descriptors.append(cInfo);
+        descriptors_map.insert(cInfo->getUuid(), cInfo);
+    }
 }
 
-void CharacteristicInfo::setCharacteristic(const QLowEnergyCharacteristic &characteristic)
+CharacteristicInfo::~CharacteristicInfo()
 {
-    m_characteristic = characteristic;
+    qDeleteAll(descriptors);
+    descriptors.clear();
+    descriptors_map.clear();
 }
 
 QString CharacteristicInfo::getName() const
 {
-    //! [les-get-descriptors]
     QString name = m_characteristic.name();
-    if (!name.isEmpty())
-        return name;
-
-    // find descriptor with CharacteristicUserDescription
-    const QList<QLowEnergyDescriptor> descriptors = m_characteristic.descriptors();
-    for (const QLowEnergyDescriptor &descriptor : descriptors) {
-        if (descriptor.type() == QBluetoothUuid::CharacteristicUserDescription) {
-            name = descriptor.value();
-            break;
-        }
-    }
-    //! [les-get-descriptors]
-
     if (name.isEmpty())
         name = "Unknown";
 
@@ -147,7 +142,12 @@ QString CharacteristicInfo::getPermission() const
     return properties;
 }
 
-QLowEnergyCharacteristic CharacteristicInfo::getCharacteristic() const
+QVariant CharacteristicInfo::getDescriptors() const
 {
-    return m_characteristic;
+    return QVariant::fromValue(descriptors);
+}
+
+DescriptorInfo *CharacteristicInfo::getDescriptor(QString uuid) const
+{
+    return descriptors_map[uuid];
 }

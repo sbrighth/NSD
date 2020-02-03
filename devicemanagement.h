@@ -3,8 +3,6 @@
 
 #include <QWidget>
 #include <QStandardItemModel>
-#include <QTimer>
-#include <QEventLoop>
 #include "adddevicegroup.h"
 #include "finddevice.h"
 #include "ble/bledevice.h"
@@ -50,7 +48,7 @@ private slots:
     void UpdateBleCharacteristicList(QString device_address, QString service_uuid);
 
     //for find device widget
-    void DoScan();
+    void DoDeviceScan();
 
     //for device list
     void SelectDevice(QModelIndexList row_indexes);

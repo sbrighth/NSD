@@ -49,71 +49,69 @@
 **
 ****************************************************************************/
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
+#include "descriptorinfo.h"
+#include "qbluetoothuuid.h"
+#include <QByteArray>
 
-#include <QObject>
-#include <qbluetoothdeviceinfo.h>
-#include <qbluetoothaddress.h>
-#include <QList>
-#include <QLowEnergyController>
-#include "serviceinfo.h"
-
-class DeviceInfo: public QObject
+DescriptorInfo::DescriptorInfo(const QLowEnergyDescriptor &descriptor):
+    m_descriptor(descriptor)
 {
-    Q_OBJECT
-    Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
-    Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
-    Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
-    Q_PROPERTY(QString update READ getServiceUpdate WRITE setUpdate NOTIFY servicesUpdateChanged)
+}
 
-public:
-    DeviceInfo() = default;
-    DeviceInfo(const QBluetoothDeviceInfo &d);
-    ~DeviceInfo();
-    QVariant getServices();
-    ServiceInfo *getService(QString uuid);
-    QString getAddress() const;
-    QString getName() const;
+void DescriptorInfo::setDescriptor(const QLowEnergyDescriptor &descriptor)
+{
+    m_descriptor = descriptor;
+}
 
-    void scanServices();
-    void disconnectFromDevice();
+QString DescriptorInfo::getName() const
+{
+    //! [les-get-descriptors]
+    QString name = m_descriptor.name();
+    if (name.isEmpty())
+        name = "Unknown";
 
-    QString getServiceUpdate();
-    bool hasControllerError() const;
-    bool isRandomAddress() const;
-    void setRandomAddress(bool newValue);
+    return name;
+}
 
-private slots:
-    // QLowEnergyController realted
-    void deviceConnected();
-    void errorReceived(QLowEnergyController::Error);
-    void deviceDisconnected();
-    void addLowEnergyService(const QBluetoothUuid &uuid);
-    void serviceScanDone();
+QString DescriptorInfo::getUuid() const
+{
+    const QBluetoothUuid uuid = m_descriptor.uuid();
+    bool success = false;
+    quint16 result16 = uuid.toUInt16(&success);
+    if (success)
+        return QStringLiteral("0x") + QString::number(result16, 16);
 
-    // ServiceInfo signal
-    void serviceCharacteristicsUpdated(QString service_uuid);
+    quint32 result32 = uuid.toUInt32(&success);
+    if (success)
+        return QStringLiteral("0x") + QString::number(result32, 16);
 
-Q_SIGNALS:
-    void deviceChanged(QString device_address);
-    void disconnected(QString device_address);
-    void servicesUpdated(QString device_address);
-    void servicesUpdateFinished(QString device_address);
-    void servicesUpdateChanged(QString device_address);
-    void characteristicsUpdated(QString device_address, QString service_uuid);
+    return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+}
 
-private:
-    void setUpdate(const QString &message);
+QString DescriptorInfo::getValue() const
+{
+    // Show raw string first and hex value below
+    QByteArray a = m_descriptor.value();
+    QString result;
+    if (a.isEmpty()) {
+        result = QStringLiteral("<none>");
+        return result;
+    }
 
-    QBluetoothDeviceInfo m_device;
-    QList<QObject*> services;
-    QMap<QString, ServiceInfo *> services_map;
-    QLowEnergyController *controller;
+    result = a;
+    result += QLatin1Char('\n');
+    result += a.toHex();
 
-    bool connected;
-    QString message;
-    bool randomAddress;
-};
+    return result;
+}
 
-#endif // DEVICEINFO_H
+QString DescriptorInfo::getHandle() const
+{
+    return QStringLiteral("0x") + QString::number(m_descriptor.handle(), 16);
+}
+
+
+QString DescriptorInfo::getType() const
+{
+    return QString::number(m_descriptor.type());
+}

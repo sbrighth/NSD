@@ -16,6 +16,7 @@ public:
     void RemoveService(bool all=false);
     void AddCharacteristic(QString service_uuid, QString name, QString uuid, QString value, QString handle, QString permission);
     void RemoveCharacteristic(QString service_uuid);
+    void AddDescriptor(QString service_uuid, QString characteristic_uuid, QString name, QString type, QString uuid, QString value);
 
 public:
     QTreeWidget *ble_service_tree;
@@ -28,6 +29,7 @@ private:
         COLUMN_NUM=0,
         COLUMN_SERVICE,
         COLUMN_CHARACTER,
+        COLUMN_DESCRIPTOR=COLUMN_CHARACTER,
         COLUMN_VALUE,
         COLUMN_IDX_CNT
     };

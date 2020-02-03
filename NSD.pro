@@ -19,6 +19,7 @@ SOURCES += \
     adddevicegroup.cpp \
     ble/bledevice.cpp \
     ble/characteristicinfo.cpp \
+    ble/descriptorinfo.cpp \
     ble/deviceinfo.cpp \
     ble/serviceinfo.cpp \
     bleserviceviewer.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     adddevicegroup.h \
     ble/bledevice.h \
     ble/characteristicinfo.h \
+    ble/descriptorinfo.h \
     ble/deviceinfo.h \
     ble/serviceinfo.h \
     bleserviceviewer.h \

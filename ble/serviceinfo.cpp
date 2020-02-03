@@ -65,16 +65,6 @@ ServiceInfo::~ServiceInfo()
     characteristics_map.clear();
 }
 
-QVariant ServiceInfo::getCharacteristics()
-{
-    return QVariant::fromValue(characteristics);
-}
-
-CharacteristicInfo *ServiceInfo::getCharacteristic(QString uuid)
-{
-    return characteristics_map[uuid];
-}
-
 QLowEnergyService *ServiceInfo::service() const
 {
     return m_service;
@@ -125,6 +115,15 @@ QString ServiceInfo::getUuid() const
     return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
 }
 
+QVariant ServiceInfo::getCharacteristics()
+{
+    return QVariant::fromValue(characteristics);
+}
+
+CharacteristicInfo *ServiceInfo::getCharacteristic(QString uuid)
+{
+    return characteristics_map[uuid];
+}
 
 void ServiceInfo::scanCharacteristics()
 {

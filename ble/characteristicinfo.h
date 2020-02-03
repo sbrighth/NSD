@@ -54,6 +54,7 @@
 #include <QObject>
 #include <QString>
 #include <QtBluetooth/QLowEnergyCharacteristic>
+#include "descriptorinfo.h"
 
 class CharacteristicInfo: public QObject
 {
@@ -67,19 +68,22 @@ class CharacteristicInfo: public QObject
 public:
     CharacteristicInfo() = default;
     CharacteristicInfo(const QLowEnergyCharacteristic &characteristic);
-    void setCharacteristic(const QLowEnergyCharacteristic &characteristic);
+    ~CharacteristicInfo();
     QString getName() const;
     QString getUuid() const;
     QString getValue() const;
     QString getHandle() const;
     QString getPermission() const;
-    QLowEnergyCharacteristic getCharacteristic() const;
+    QVariant getDescriptors() const;
+    DescriptorInfo *getDescriptor(QString uuid) const;
 
 Q_SIGNALS:
     void characteristicChanged();
 
 private:
     QLowEnergyCharacteristic m_characteristic;
+    QList<QObject*> descriptors;
+    QMap<QString, DescriptorInfo*> descriptors_map;
 };
 
 #endif // CHARACTERISTICINFO_H

@@ -49,71 +49,36 @@
 **
 ****************************************************************************/
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
-
+#ifndef DESCRIPTORISTICINFO_H
+#define DESCRIPTORISTICINFO_H
 #include <QObject>
-#include <qbluetoothdeviceinfo.h>
-#include <qbluetoothaddress.h>
-#include <QList>
-#include <QLowEnergyController>
-#include "serviceinfo.h"
+#include <QString>
+#include <QtBluetooth/QLowEnergyDescriptor>
 
-class DeviceInfo: public QObject
+class DescriptorInfo: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
-    Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
-    Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
-    Q_PROPERTY(QString update READ getServiceUpdate WRITE setUpdate NOTIFY servicesUpdateChanged)
+    Q_PROPERTY(QString descriptorName READ getName NOTIFY descriptorChanged)
+    Q_PROPERTY(QString descriptorUuid READ getUuid NOTIFY descriptorChanged)
+    Q_PROPERTY(QString descriptorValue READ getValue NOTIFY descriptorChanged)
+    Q_PROPERTY(QString descriptorHandle READ getHandle NOTIFY descriptorChanged)
+    Q_PROPERTY(QString descriptorType READ getType NOTIFY descriptorChanged)
 
 public:
-    DeviceInfo() = default;
-    DeviceInfo(const QBluetoothDeviceInfo &d);
-    ~DeviceInfo();
-    QVariant getServices();
-    ServiceInfo *getService(QString uuid);
-    QString getAddress() const;
+    DescriptorInfo() = default;
+    DescriptorInfo(const QLowEnergyDescriptor &descriptor);
+    void setDescriptor(const QLowEnergyDescriptor &descriptor);
     QString getName() const;
-
-    void scanServices();
-    void disconnectFromDevice();
-
-    QString getServiceUpdate();
-    bool hasControllerError() const;
-    bool isRandomAddress() const;
-    void setRandomAddress(bool newValue);
-
-private slots:
-    // QLowEnergyController realted
-    void deviceConnected();
-    void errorReceived(QLowEnergyController::Error);
-    void deviceDisconnected();
-    void addLowEnergyService(const QBluetoothUuid &uuid);
-    void serviceScanDone();
-
-    // ServiceInfo signal
-    void serviceCharacteristicsUpdated(QString service_uuid);
+    QString getUuid() const;
+    QString getValue() const;
+    QString getHandle() const;
+    QString getType() const;
 
 Q_SIGNALS:
-    void deviceChanged(QString device_address);
-    void disconnected(QString device_address);
-    void servicesUpdated(QString device_address);
-    void servicesUpdateFinished(QString device_address);
-    void servicesUpdateChanged(QString device_address);
-    void characteristicsUpdated(QString device_address, QString service_uuid);
+    void descriptorChanged();
 
 private:
-    void setUpdate(const QString &message);
-
-    QBluetoothDeviceInfo m_device;
-    QList<QObject*> services;
-    QMap<QString, ServiceInfo *> services_map;
-    QLowEnergyController *controller;
-
-    bool connected;
-    QString message;
-    bool randomAddress;
+    QLowEnergyDescriptor m_descriptor;
 };
 
-#endif // DEVICEINFO_H
+#endif // DESCRIPTORISTICINFO_H

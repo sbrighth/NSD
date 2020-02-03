@@ -78,9 +78,9 @@ void BleServiceViewer::RemoveService(bool all)
 
 void BleServiceViewer::AddCharacteristic(QString service_uuid, QString name, QString uuid, QString value, QString handle, QString permission)
 {
-    int cnt = ble_service_tree->topLevelItemCount();
+    int service_cnt = ble_service_tree->topLevelItemCount();
 
-    for(int service_idx=0; service_idx<cnt; service_idx++)
+    for(int service_idx=0; service_idx<service_cnt; service_idx++)
     {
         QTreeWidgetItem *service_root = ble_service_tree->topLevelItem(service_idx);
         if(service_root->child(SERVICE_UUID)->text(COLUMN_VALUE) != service_uuid)      //uuid
@@ -132,6 +132,51 @@ void BleServiceViewer::RemoveCharacteristic(QString service_uuid)
         for(int character_idx=service_root->childCount()-1; character_idx>=SERVICE_CHARACTER; character_idx--)
             service_root->takeChild(character_idx);
     }
+}
+
+void BleServiceViewer::AddDescriptor(QString service_uuid, QString characteristic_uuid, QString name, QString type, QString uuid, QString value)
+{
+    int service_cnt = ble_service_tree->topLevelItemCount();
+
+    for(int service_idx=0; service_idx<service_cnt; service_idx++)
+    {
+        QTreeWidgetItem *service_root = ble_service_tree->topLevelItem(service_idx);
+        if(service_root->child(SERVICE_UUID)->text(COLUMN_VALUE) != service_uuid)      //uuid
+            continue;
+
+        int character_cnt = service_root->childCount() - SERVICE_CHARACTER;
+        if(character_cnt <= 0)
+            continue;
+
+        for(int character_idx=0; character_idx<character_cnt; character_idx++)
+        {
+            QTreeWidgetItem *character_root = service_root->child(character_idx+SERVICE_CHARACTER);
+            if(character_root->child(CHARACTER_UUID)->text(COLUMN_VALUE) != characteristic_uuid)
+                continue;
+
+            QTreeWidgetItem *descriptor_name = new QTreeWidgetItem();
+            descriptor_name->setText(COLUMN_DESCRIPTOR, "desc_name");
+            descriptor_name->setText(COLUMN_VALUE, name);
+
+            QTreeWidgetItem *descriptor_type = new QTreeWidgetItem();
+            descriptor_type->setText(COLUMN_DESCRIPTOR, "desc_type");
+            descriptor_type->setText(COLUMN_VALUE, type);
+
+            QTreeWidgetItem *descriptor_uuid = new QTreeWidgetItem();
+            descriptor_uuid->setText(COLUMN_DESCRIPTOR, "desc_uuid");
+            descriptor_uuid->setText(COLUMN_VALUE, uuid);
+
+            QTreeWidgetItem *descriptor_value = new QTreeWidgetItem();
+            descriptor_value->setText(COLUMN_DESCRIPTOR, "desc_value");
+            descriptor_value->setText(COLUMN_VALUE, value);
+
+            character_root->addChild(descriptor_name);
+            character_root->addChild(descriptor_type);
+            character_root->addChild(descriptor_uuid);
+            character_root->addChild(descriptor_value);
+        }
+    }
+
 }
 
 void BleServiceViewer::SortService()

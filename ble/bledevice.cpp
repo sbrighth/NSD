@@ -59,7 +59,6 @@
 #include <QDebug>
 #include <QList>
 #include <QMetaEnum>
-#include <QTimer>
 
 BleDevice::BleDevice(QString adapter_address)
 {
@@ -190,4 +189,38 @@ bool BleDevice::state()
 int BleDevice::getCount()
 {
     return devices_map.size();
+}
+
+void BleDevice::connectDevice(QString device_address)
+{
+    if(device_address.isEmpty())
+        return;
+
+    getDevice(device_address)->scanServices();
+}
+
+void BleDevice::disconnectDevice(QString deviced_address)
+{
+
+}
+
+void BleDevice::scanCharacteristics(QString device_address, QString service_uuid)
+{
+    DeviceInfo *device = getDevice(device_address);
+
+    if(service_uuid.isEmpty())
+    {
+        QList<QObject*> services = device->getServices().value<QList<QObject*>>();
+
+        foreach(QObject* obj, services)
+        {
+            ServiceInfo *service = qobject_cast<ServiceInfo *>(obj);
+            service->scanCharacteristics();
+        }
+    }
+    else
+    {
+        ServiceInfo *service = device->getService(service_uuid);
+        service->scanCharacteristics();
+    }
 }

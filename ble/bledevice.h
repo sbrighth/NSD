@@ -61,6 +61,7 @@
 #include "deviceinfo.h"
 #include "serviceinfo.h"
 #include "characteristicinfo.h"
+#include "descriptorinfo.h"
 
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
@@ -78,6 +79,10 @@ public:
     QString getUpdate();
     bool state();
     int getCount();
+
+    void connectDevice(QString device_address);
+    void disconnectDevice(QString deviced_address);
+    void scanCharacteristics(QString device_address, QString service_uuid=QString(""));
 
 public slots:
     void startDeviceDiscovery();

@@ -67,12 +67,12 @@ public:
     ServiceInfo() = default;
     ServiceInfo(QLowEnergyService *service);
     ~ServiceInfo();
-    QVariant getCharacteristics();
-    CharacteristicInfo *getCharacteristic(QString uuid);
     QLowEnergyService *service() const;
     QString getUuid() const;
     QString getName() const;
     QString getType() const;
+    QVariant getCharacteristics();
+    CharacteristicInfo *getCharacteristic(QString uuid);
 
     void scanCharacteristics();
 
