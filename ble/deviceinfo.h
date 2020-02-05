@@ -92,16 +92,15 @@ private slots:
     void addLowEnergyService(const QBluetoothUuid &uuid);
     void serviceScanDone();
 
-    // ServiceInfo signal
-    void serviceCharacteristicsUpdated(QString service_uuid);
-
 Q_SIGNALS:
     void deviceChanged(QString device_address);
     void disconnected(QString device_address);
     void servicesUpdated(QString device_address);
     void servicesUpdateFinished(QString device_address);
     void servicesUpdateChanged(QString device_address);
-    void characteristicsUpdated(QString device_address, QString service_uuid);
+    void characteristicListUpdated(QString device_address, QString service_uuid);
+    void characteristicValueUpdated(QString device_address, QString service_uuid, QString characteristic_uuid);
+    void descriptorValueUpdated(QString device_address, QString service_uuid, QString descriptor_uuid);
 
 private:
     void setUpdate(const QString &message);

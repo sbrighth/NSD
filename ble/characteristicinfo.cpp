@@ -72,6 +72,11 @@ CharacteristicInfo::~CharacteristicInfo()
     descriptors_map.clear();
 }
 
+QLowEnergyCharacteristic *CharacteristicInfo::characteristic()
+{
+    return &m_characteristic;
+}
+
 QString CharacteristicInfo::getName() const
 {
     QString name = m_characteristic.name();
@@ -106,10 +111,7 @@ QString CharacteristicInfo::getValue() const
         return result;
     }
 
-    result = a;
-    result += QLatin1Char('\n');
-    result += a.toHex();
-
+    result = a.toHex();
     return result;
 }
 

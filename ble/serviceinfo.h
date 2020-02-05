@@ -58,14 +58,10 @@
 class ServiceInfo: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsUpdated)
-    Q_PROPERTY(QString serviceName READ getName NOTIFY serviceChanged)
-    Q_PROPERTY(QString serviceUuid READ getUuid NOTIFY serviceChanged)
-    Q_PROPERTY(QString serviceType READ getType NOTIFY serviceChanged)
 
 public:
     ServiceInfo() = default;
-    ServiceInfo(QLowEnergyService *service);
+    ServiceInfo(QLowEnergyService *service, QString device_address);
     ~ServiceInfo();
     QLowEnergyService *service() const;
     QString getUuid() const;
@@ -78,16 +74,25 @@ public:
 
 Q_SIGNALS:
     void serviceChanged(QString service_uuid);
-    void characteristicsUpdated(QString service_uuid);
+    void characteristicListUpdated(QString device_address, QString service_uuid);
+    void characteristicValueUpdated(QString device_address, QString service_uuid, QString characteristic_uuid);
+    void descriptorValueUpdated(QString device_address, QString service_uuid, QString descriptor_uuid);
 
 private slots:
     // QLowEnergyService related
     void serviceDetailsDiscovered(QLowEnergyService::ServiceState newState);
+    void characteristicChanged(const QLowEnergyCharacteristic &info, const QByteArray &value);
+    void characteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value);
+    void characteristicWritten(const QLowEnergyCharacteristic &info, const QByteArray &value);
+    void descriptorRead(const QLowEnergyDescriptor &info, const QByteArray &value);
+    void descriptorWritten(const QLowEnergyDescriptor &info, const QByteArray &value);
+    void errorReceived(QLowEnergyService::ServiceError error);
 
 private:
     QLowEnergyService *m_service = nullptr;
     QList<QObject*> characteristics;
     QMap<QString, CharacteristicInfo*> characteristics_map;
+    QString device_address;
 };
 
 #endif // SERVICEINFO_H

@@ -58,9 +58,9 @@ DescriptorInfo::DescriptorInfo(const QLowEnergyDescriptor &descriptor):
 {
 }
 
-void DescriptorInfo::setDescriptor(const QLowEnergyDescriptor &descriptor)
+QLowEnergyDescriptor *DescriptorInfo::descriptor()
 {
-    m_descriptor = descriptor;
+    return &m_descriptor;
 }
 
 QString DescriptorInfo::getName() const
@@ -98,10 +98,7 @@ QString DescriptorInfo::getValue() const
         return result;
     }
 
-    result = a;
-    result += QLatin1Char('\n');
-    result += a.toHex();
-
+    result = a.toHex();
     return result;
 }
 

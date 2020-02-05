@@ -58,24 +58,16 @@
 class DescriptorInfo: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString descriptorName READ getName NOTIFY descriptorChanged)
-    Q_PROPERTY(QString descriptorUuid READ getUuid NOTIFY descriptorChanged)
-    Q_PROPERTY(QString descriptorValue READ getValue NOTIFY descriptorChanged)
-    Q_PROPERTY(QString descriptorHandle READ getHandle NOTIFY descriptorChanged)
-    Q_PROPERTY(QString descriptorType READ getType NOTIFY descriptorChanged)
 
 public:
     DescriptorInfo() = default;
     DescriptorInfo(const QLowEnergyDescriptor &descriptor);
-    void setDescriptor(const QLowEnergyDescriptor &descriptor);
+    QLowEnergyDescriptor *descriptor();
     QString getName() const;
     QString getUuid() const;
     QString getValue() const;
     QString getHandle() const;
     QString getType() const;
-
-Q_SIGNALS:
-    void descriptorChanged();
 
 private:
     QLowEnergyDescriptor m_descriptor;

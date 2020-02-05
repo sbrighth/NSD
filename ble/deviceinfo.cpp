@@ -192,10 +192,12 @@ void DeviceInfo::addLowEnergyService(const QBluetoothUuid &serviceUuid)
         return;
     }
     //! [les-service-1]
-    auto serv = new ServiceInfo(service);
+    ServiceInfo *serv = new ServiceInfo(service, getAddress());
     services.append(serv);
     services_map.insert(serv->getUuid(), serv);
-    connect(serv, SIGNAL(characteristicsUpdated(QString)), this, SLOT(serviceCharacteristicsUpdated(QString)));
+    connect(serv, SIGNAL(characteristicListUpdated(QString, QString)), this, SIGNAL(characteristicListUpdated(QString, QString)));
+    connect(serv, SIGNAL(characteristicValueUpdated(QString, QString, QString)), this, SIGNAL(characteristicValueUpdated(QString, QString, QString)));
+    connect(serv, SIGNAL(descriptorValueUpdated(QString, QString, QString)), this, SIGNAL(descriptorValueUpdated(QString, QString, QString)));
 
     emit servicesUpdated(getAddress());
 }
@@ -223,11 +225,6 @@ void DeviceInfo::serviceScanDone()
         emit servicesUpdated(getAddress());
 
     emit servicesUpdateFinished(getAddress());
-}
-
-void DeviceInfo::serviceCharacteristicsUpdated(QString service_uuid)
-{
-    emit characteristicsUpdated(getAddress(), service_uuid);
 }
 
 void DeviceInfo::deviceDisconnected()

@@ -52,10 +52,17 @@
 #include "serviceinfo.h"
 #include <QTimer>
 
-ServiceInfo::ServiceInfo(QLowEnergyService *service):
-    m_service(service)
+ServiceInfo::ServiceInfo(QLowEnergyService *service, QString address):
+    m_service(service), device_address(address)
 {
     m_service->setParent(this);
+
+    connect(m_service, &QLowEnergyService::characteristicChanged, this, &ServiceInfo::characteristicChanged);
+    connect(m_service, &QLowEnergyService::characteristicRead, this, &ServiceInfo::characteristicRead);
+    connect(m_service, &QLowEnergyService::characteristicWritten, this, &ServiceInfo::characteristicWritten);
+    connect(m_service, &QLowEnergyService::descriptorRead, this, &ServiceInfo::descriptorRead);
+    connect(m_service, &QLowEnergyService::descriptorWritten, this, &ServiceInfo::descriptorWritten);
+    connect(m_service, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, &ServiceInfo::errorReceived);
 }
 
 ServiceInfo::~ServiceInfo()
@@ -133,7 +140,7 @@ void ServiceInfo::scanCharacteristics()
     qDeleteAll(characteristics);
     characteristics.clear();
     characteristics_map.clear();
-    emit characteristicsUpdated(getUuid());
+    emit characteristicListUpdated(device_address, getUuid());
 
     if (m_service->state() == QLowEnergyService::DiscoveryRequired) {
         //! [les-service-3]
@@ -153,9 +160,7 @@ void ServiceInfo::scanCharacteristics()
         characteristics_map.insert(cInfo->getUuid(), cInfo);
     }
 
-    //QTimer::singleShot(0, this, &ServiceInfo::characteristicsUpdated);
-    //QTimer::singleShot(0, this, SIGNAL(characteristicsUpdated(QString)), getUuid());
-    emit characteristicsUpdated(getUuid());
+    emit characteristicListUpdated(device_address, getUuid());
 
 }
 
@@ -167,8 +172,9 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
         // We have to queue the signal up to give UI time to even enter
         // the above mode
         if (newState != QLowEnergyService::DiscoveringServices) {
-            QMetaObject::invokeMethod(this, "characteristicsUpdated",
+            QMetaObject::invokeMethod(this, "characteristicListUpdated",
                                       Qt::QueuedConnection,
+                                      Q_ARG(QString, device_address),
                                       Q_ARG(QString, getUuid()));
         }
         return;
@@ -187,5 +193,39 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
     }
     //! [les-chars]
 
-    emit characteristicsUpdated(getUuid());
+    emit characteristicListUpdated(device_address, getUuid());
+}
+
+void ServiceInfo::characteristicChanged(const QLowEnergyCharacteristic &info, const QByteArray &value)
+{
+    qDebug() << __func__ << " " << value.toHex();
+}
+
+void ServiceInfo::characteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value)
+{
+    qDebug() << __func__ << " " << value.toHex();
+    emit characteristicValueUpdated(device_address, getUuid(), CharacteristicInfo(info).getUuid());
+}
+
+void ServiceInfo::characteristicWritten(const QLowEnergyCharacteristic &info, const QByteArray &value)
+{
+    qDebug() << __func__ << " " << value.toHex();
+    emit characteristicValueUpdated(device_address, getUuid(), CharacteristicInfo(info).getUuid());
+}
+
+void ServiceInfo::descriptorRead(const QLowEnergyDescriptor &info, const QByteArray &value)
+{
+    qDebug() << __func__ << " " << value.toHex();
+    emit descriptorValueUpdated(device_address, getUuid(), DescriptorInfo(info).getUuid());
+}
+
+void ServiceInfo::descriptorWritten(const QLowEnergyDescriptor &info, const QByteArray &value)
+{
+    qDebug() << __func__ << " " << value.toHex();
+    emit descriptorValueUpdated(device_address, getUuid(), DescriptorInfo(info).getUuid());
+}
+
+void ServiceInfo::errorReceived(QLowEnergyService::ServiceError error)
+{
+    qDebug() << __func__ << " " << error;
 }

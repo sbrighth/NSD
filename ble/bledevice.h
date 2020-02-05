@@ -81,11 +81,15 @@ public:
     int getCount();
 
     void connectDevice(QString device_address);
-    void disconnectDevice(QString deviced_address);
+    void disconnectDevice(QString device_address);
     void scanCharacteristics(QString device_address, QString service_uuid=QString(""));
 
 public slots:
     void startDeviceDiscovery();
+    void ReadCharacter(QString device_address, QStringList uuid);
+    void WriteCharacter(QString device_address, QStringList uuid, QByteArray val);
+    void ReadDescriptor(QString device_address, QStringList uuid);
+    void WriteDescriptor(QString device_address, QStringList uuid, QByteArray val);
 
 private slots:
     // QBluetoothDeviceDiscoveryAgent related
@@ -103,7 +107,9 @@ Q_SIGNALS:
     void servicesUpdated(QString device_address);
     void servicesUpdateFinished(QString device_address);
     void servicesUpdateChanged(QString device_address);
-    void characteristicsUpdated(QString device_address, QString service_uuid);
+    void characteristicListUpdated(QString device_address, QString service_uuid);
+    void characteristicValueUpdated(QString device_address, QString service_uuid, QString characteristic_uuid);
+    void descriptorValueUpdated(QString device_address, QString service_uuid, QString descriptor_uuid);
 
 private:
     void setUpdate(const QString &message);

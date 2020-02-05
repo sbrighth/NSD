@@ -74,7 +74,6 @@ BleDevice::BleDevice(QString adapter_address)
     //! [les-devicediscovery-1]
 
     setUpdate("Search");
-    qDebug() << "devicea adapter " << discoveryAgent->error();
  }
 
 BleDevice::~BleDevice()
@@ -105,6 +104,43 @@ void BleDevice::startDeviceDiscovery()
     }
 }
 
+void BleDevice::ReadCharacter(QString device_address, QStringList uuid)
+{
+    //uuid[0] = service_uuid
+    //uuid[1] = characteristic_uuid
+    QLowEnergyService *service = getDevice(device_address)->getService(uuid.at(0))->service();
+    QLowEnergyCharacteristic *ch = getDevice(device_address)->getService(uuid.at(0))->getCharacteristic(uuid.at(1))->characteristic();
+
+    service->readCharacteristic(*ch);
+}
+
+void BleDevice::WriteCharacter(QString device_address, QStringList uuid, QByteArray val)
+{
+    QLowEnergyService *service = getDevice(device_address)->getService(uuid.at(0))->service();
+    QLowEnergyCharacteristic *ch = getDevice(device_address)->getService(uuid.at(0))->getCharacteristic(uuid.at(1))->characteristic();
+
+    service->writeCharacteristic(*ch, val);
+}
+
+void BleDevice::ReadDescriptor(QString device_address, QStringList uuid)
+{
+    //uuid[0] = service_uuid
+    //uuid[1] = characteristic_uuid
+    //uuid[2] = descriptor_uuid
+    QLowEnergyService *service = getDevice(device_address)->getService(uuid.at(0))->service();
+    QLowEnergyDescriptor *desc = getDevice(device_address)->getService(uuid.at(0))->getCharacteristic(uuid.at(1))->getDescriptor(uuid.at(2))->descriptor();
+
+    service->readDescriptor(*desc);
+}
+
+void BleDevice::WriteDescriptor(QString device_address, QStringList uuid, QByteArray val)
+{
+    QLowEnergyService *service = getDevice(device_address)->getService(uuid.at(0))->service();
+    QLowEnergyDescriptor *desc = getDevice(device_address)->getService(uuid.at(0))->getCharacteristic(uuid.at(1))->getDescriptor(uuid.at(2))->descriptor();
+
+    service->writeDescriptor(*desc, val);
+}
+
 //! [les-devicediscovery-3]
 void BleDevice::addDevice(const QBluetoothDeviceInfo &info)
 {
@@ -122,7 +158,7 @@ void BleDevice::deviceScanFinished()
             if(!nextDevice.name().startsWith("Thingy") && !nextDevice.name().startsWith("ELA"))
                     continue;
 
-            DeviceInfo *new_device = new DeviceInfo(nextDevice);
+            auto *new_device = new DeviceInfo(nextDevice);
             devices.append(new_device);
             devices_map.insert(nextDevice.address().toString(), new_device);
 
@@ -130,7 +166,9 @@ void BleDevice::deviceScanFinished()
             connect(new_device, SIGNAL(servicesUpdated(QString)), this, SIGNAL(servicesUpdated(QString)));
             connect(new_device, SIGNAL(servicesUpdateFinished(QString)), this, SIGNAL(servicesUpdateFinished(QString)));
             connect(new_device, SIGNAL(servicesUpdateChanged(QString)), this, SIGNAL(servicesUpdateChanged(QString)));
-            connect(new_device, SIGNAL(characteristicsUpdated(QString, QString)), this, SIGNAL(characteristicsUpdated(QString, QString)));
+            connect(new_device, SIGNAL(characteristicListUpdated(QString, QString)), this, SIGNAL(characteristicListUpdated(QString, QString)));
+            connect(new_device, SIGNAL(characteristicValueUpdated(QString, QString, QString)), this, SIGNAL(characteristicValueUpdated(QString, QString, QString)));
+            connect(new_device, SIGNAL(descriptorValueUpdated(QString, QString, QString)), this, SIGNAL(descriptorValueUpdated(QString, QString, QString)));
         }
 
 
@@ -199,13 +237,19 @@ void BleDevice::connectDevice(QString device_address)
     getDevice(device_address)->scanServices();
 }
 
-void BleDevice::disconnectDevice(QString deviced_address)
+void BleDevice::disconnectDevice(QString device_address)
 {
+    if(device_address.isEmpty())
+        return;
 
+    getDevice(device_address)->disconnectFromDevice();
 }
 
 void BleDevice::scanCharacteristics(QString device_address, QString service_uuid)
 {
+    if(device_address.isEmpty())
+        return;
+
     DeviceInfo *device = getDevice(device_address);
 
     if(service_uuid.isEmpty())

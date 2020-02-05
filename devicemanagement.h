@@ -46,6 +46,8 @@ private slots:
     void SortBleServiceList(QString device_address);
 
     void UpdateBleCharacteristicList(QString device_address, QString service_uuid);
+    void UpdateBleCharacteristicValue(QString device_address, QString service_uuid, QString character_uuid);
+    void UpdateBleDescriptorValue(QString device_address, QString service_uuid, QString descriptor_uuid);
 
     //for find device widget
     void DoDeviceScan();
