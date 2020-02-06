@@ -20,6 +20,7 @@ public:
     explicit DeviceManagement(QWidget *parent = nullptr);
     ~DeviceManagement();
     QString GetCurrentDeviceGroupConnectMode();
+    void SetBleServiceViewer(BleServiceViewer *viewer);
 
 private slots:
 

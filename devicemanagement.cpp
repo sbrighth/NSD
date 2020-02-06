@@ -62,21 +62,10 @@ DeviceManagement::DeviceManagement(QWidget *parent) :
     find_device = new FindDevice(this);
     connect(find_device, SIGNAL(SignalDoScan()), this, SLOT(DoDeviceScan()));
     connect(find_device, SIGNAL(SignalSelectDevice(QModelIndexList)), this, SLOT(SelectDevice(QModelIndexList)));
-
-    // ble service viewer
-    ble_service_viewer = new BleServiceViewer(parent);
-    ble_service_viewer->setGeometry(10, 10, 400, 500);
-    ble_service_viewer->hide();
-
-    connect(ble_service_viewer, SIGNAL(SignalReadCharacter(QString, QStringList)), ble_device, SLOT(ReadCharacter(QString, QStringList)));
-    connect(ble_service_viewer, SIGNAL(SignalWriteCharacter(QString, QStringList, QByteArray)), ble_device, SLOT(WriteCharacter(QString, QStringList, QByteArray)));
-    connect(ble_service_viewer, SIGNAL(SignalReadDescriptor(QString, QStringList)), ble_device, SLOT(ReadDescriptor(QString, QStringList)));
-    connect(ble_service_viewer, SIGNAL(SignalWriteDescriptor(QString, QStringList, QByteArray)), ble_device, SLOT(WriteDescriptor(QString, QStringList, QByteArray)));
 }
 
 DeviceManagement::~DeviceManagement()
 {
-    delete ble_service_viewer;
     delete find_device;
     delete add_device_group;
     delete ble_device;
@@ -387,4 +376,14 @@ QString DeviceManagement::GetCurrentDeviceGroupConnectMode()
 {
     int current_row = ui->device_group->currentIndex().row();
     return device_group_model->data(device_group_model->index(current_row, 2)).toString();
+}
+
+void DeviceManagement::SetBleServiceViewer(BleServiceViewer *viewer)
+{
+    ble_service_viewer = viewer;
+
+    connect(ble_service_viewer, SIGNAL(SignalReadCharacter(QString, QStringList)), ble_device, SLOT(ReadCharacter(QString, QStringList)));
+    connect(ble_service_viewer, SIGNAL(SignalWriteCharacter(QString, QStringList, QByteArray)), ble_device, SLOT(WriteCharacter(QString, QStringList, QByteArray)));
+    connect(ble_service_viewer, SIGNAL(SignalReadDescriptor(QString, QStringList)), ble_device, SLOT(ReadDescriptor(QString, QStringList)));
+    connect(ble_service_viewer, SIGNAL(SignalWriteDescriptor(QString, QStringList, QByteArray)), ble_device, SLOT(WriteDescriptor(QString, QStringList, QByteArray)));
 }
