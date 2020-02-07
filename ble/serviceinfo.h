@@ -75,6 +75,7 @@ public:
 Q_SIGNALS:
     void serviceChanged(QString service_uuid);
     void characteristicListUpdated(QString device_address, QString service_uuid);
+    void characteristicValueChanged(QString device_address, QString service_uuid, QString characteristic_uuid, QByteArray value);
     void characteristicValueUpdated(QString device_address, QString service_uuid, QString characteristic_uuid);
     void descriptorValueUpdated(QString device_address, QString service_uuid, QString descriptor_uuid);
 

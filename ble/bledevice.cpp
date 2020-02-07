@@ -167,6 +167,7 @@ void BleDevice::deviceScanFinished()
             connect(new_device, SIGNAL(servicesUpdateFinished(QString)), this, SIGNAL(servicesUpdateFinished(QString)));
             connect(new_device, SIGNAL(servicesUpdateChanged(QString)), this, SIGNAL(servicesUpdateChanged(QString)));
             connect(new_device, SIGNAL(characteristicListUpdated(QString, QString)), this, SIGNAL(characteristicListUpdated(QString, QString)));
+            connect(new_device, SIGNAL(characteristicValueChanged(QString, QString, QString, QByteArray)), this, SIGNAL(characteristicValueChanged(QString, QString, QString, QByteArray)));
             connect(new_device, SIGNAL(characteristicValueUpdated(QString, QString, QString)), this, SIGNAL(characteristicValueUpdated(QString, QString, QString)));
             connect(new_device, SIGNAL(descriptorValueUpdated(QString, QString, QString)), this, SIGNAL(descriptorValueUpdated(QString, QString, QString)));
         }

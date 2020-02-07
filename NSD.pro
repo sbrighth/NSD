@@ -23,6 +23,7 @@ SOURCES += \
     ble/deviceinfo.cpp \
     ble/serviceinfo.cpp \
     bleserviceviewer.cpp \
+    collectdata.cpp \
     devicemanagement.cpp \
     finddevice.cpp \
     main.cpp \
@@ -36,6 +37,7 @@ HEADERS += \
     ble/deviceinfo.h \
     ble/serviceinfo.h \
     bleserviceviewer.h \
+    collectdata.h \
     devicemanagement.h \
     finddevice.h \
     mainwindow.h

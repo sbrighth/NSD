@@ -9,6 +9,9 @@ DeviceManagement::DeviceManagement(QWidget *parent) :
     ui(new Ui::DeviceManagement)
 {
     ui->setupUi(this);
+    ble_service_viewer = Q_NULLPTR;
+    data_handler = Q_NULLPTR;
+    motion_notify = false;
 
     // device group
     device_group_model = new QStandardItemModel(0, 4, this);
@@ -41,7 +44,7 @@ DeviceManagement::DeviceManagement(QWidget *parent) :
     connect(ui->connect, SIGNAL(clicked()), this, SLOT(ConnectDevice()));
     connect(ui->disconnect, SIGNAL(clicked()), this, SLOT(DisconnectDevice()));
     connect(ui->remove, SIGNAL(clicked()), this, SLOT(RemoveDevice()));
-    connect(ui->show_ble_services, SIGNAL(clicked()), this, SLOT(ShowBleServices()));
+    connect(ui->motion_on_off, SIGNAL(clicked()), this, SLOT(ToggleMotionDescriptor()));
     connect(ui->scan_ble_characteristics, SIGNAL(clicked()), this, SLOT(ScanBleCharacteristics()));
 
     // ble device
@@ -139,12 +142,32 @@ void DeviceManagement::RemoveDevice()
     device_list_model->removeRow(row_index);
 }
 
-void DeviceManagement::ShowBleServices()
+void DeviceManagement::ToggleMotionDescriptor()
 {
-    if(ble_service_viewer->isVisible())
-        ble_service_viewer->hide();
+    // this is temp code. later we have to check device is connected and service is discovered
+
+    int row_index = ui->device_list->currentIndex().row();
+    QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
+    QString service_uuid = "ef680400-9b35-4933-9b10-52ffa9740042";
+    QString characteristic_uuid = "ef680406-9b35-4933-9b10-52ffa9740042";
+    QString descriptor_uuid = "0x2902";
+
+    QStringList uuid;
+    uuid << service_uuid << characteristic_uuid << descriptor_uuid;
+
+    QByteArray value;
+    if(motion_notify == true)
+    {
+        value = QByteArray::fromHex("0000");
+        motion_notify = false;
+    }
     else
-        ble_service_viewer->show();
+    {
+        value = QByteArray::fromHex("0100");
+        motion_notify = true;
+    }
+
+    ble_device->WriteDescriptor(address, uuid, value);
 }
 
 void DeviceManagement::ScanBleCharacteristics()
@@ -380,10 +403,30 @@ QString DeviceManagement::GetCurrentDeviceGroupConnectMode()
 
 void DeviceManagement::SetBleServiceViewer(BleServiceViewer *viewer)
 {
+    if(ble_service_viewer != Q_NULLPTR)
+    {
+        disconnect(ble_service_viewer, SIGNAL(SignalReadCharacter(QString, QStringList)), 0, 0);
+        disconnect(ble_service_viewer, SIGNAL(SignalWriteCharacter(QString, QStringList, QByteArray)), 0, 0);
+        disconnect(ble_service_viewer, SIGNAL(SignalReadDescriptor(QString, QStringList)), 0, 0);
+        disconnect(ble_service_viewer, SIGNAL(SignalWriteDescriptor(QString, QStringList, QByteArray)), 0, 0);
+    }
+
     ble_service_viewer = viewer;
 
     connect(ble_service_viewer, SIGNAL(SignalReadCharacter(QString, QStringList)), ble_device, SLOT(ReadCharacter(QString, QStringList)));
     connect(ble_service_viewer, SIGNAL(SignalWriteCharacter(QString, QStringList, QByteArray)), ble_device, SLOT(WriteCharacter(QString, QStringList, QByteArray)));
     connect(ble_service_viewer, SIGNAL(SignalReadDescriptor(QString, QStringList)), ble_device, SLOT(ReadDescriptor(QString, QStringList)));
     connect(ble_service_viewer, SIGNAL(SignalWriteDescriptor(QString, QStringList, QByteArray)), ble_device, SLOT(WriteDescriptor(QString, QStringList, QByteArray)));
+}
+
+void DeviceManagement::SetDataHandler(CollectData *handler)
+{
+    if(data_handler != Q_NULLPTR)
+    {
+        disconnect(ble_device, SIGNAL(characteristicValueBursted(QString, QString, QString, QString)), 0, 0);
+    }
+
+    data_handler = handler;
+
+    connect(ble_device, SIGNAL(characteristicValueChanged(QString, QString, QString, QByteArray)), data_handler, SLOT(BleDataHandle(QString, QString, QString, QByteArray)));
 }

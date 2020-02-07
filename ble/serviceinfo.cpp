@@ -199,6 +199,7 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
 void ServiceInfo::characteristicChanged(const QLowEnergyCharacteristic &info, const QByteArray &value)
 {
     qDebug() << __func__ << " " << value.toHex();
+    emit characteristicValueChanged(device_address, getUuid(), CharacteristicInfo(info).getUuid(), value);
 }
 
 void ServiceInfo::characteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value)

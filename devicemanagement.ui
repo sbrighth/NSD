@@ -172,16 +172,16 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="show_ble_services">
+    <widget class="QPushButton" name="scan_ble_characteristics">
      <property name="text">
-      <string>show BLE services</string>
+      <string>scan BLE characteristic</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="scan_ble_characteristics">
+    <widget class="QPushButton" name="motion_on_off">
      <property name="text">
-      <string>scan BLE characteristic</string>
+      <string>motion on/off</string>
      </property>
     </widget>
    </item>

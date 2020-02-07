@@ -7,6 +7,7 @@
 #include "finddevice.h"
 #include "ble/bledevice.h"
 #include "bleserviceviewer.h"
+#include "collectdata.h"
 
 namespace Ui {
 class DeviceManagement;
@@ -21,6 +22,7 @@ public:
     ~DeviceManagement();
     QString GetCurrentDeviceGroupConnectMode();
     void SetBleServiceViewer(BleServiceViewer *viewer);
+    void SetDataHandler(CollectData *handler);
 
 private slots:
 
@@ -57,7 +59,7 @@ private slots:
     void SelectDevice(QModelIndexList row_indexes);
 
     //for ble service view
-    void ShowBleServices();
+    void ToggleMotionDescriptor();
     void ScanBleCharacteristics();
 
 private:
@@ -69,8 +71,10 @@ private:
     FindDevice *find_device;
     BleDevice *ble_device;
     BleServiceViewer *ble_service_viewer;
+    CollectData *data_handler;
 
     DeviceGroupItem *item;
+    bool motion_notify;
 };
 
 #endif // DEVICEMANAGEMENT_H

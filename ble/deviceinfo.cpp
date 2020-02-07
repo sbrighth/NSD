@@ -196,6 +196,7 @@ void DeviceInfo::addLowEnergyService(const QBluetoothUuid &serviceUuid)
     services.append(serv);
     services_map.insert(serv->getUuid(), serv);
     connect(serv, SIGNAL(characteristicListUpdated(QString, QString)), this, SIGNAL(characteristicListUpdated(QString, QString)));
+    connect(serv, SIGNAL(characteristicValueChanged(QString, QString, QString, QByteArray)), this, SIGNAL(characteristicValueChanged(QString, QString, QString, QByteArray)));
     connect(serv, SIGNAL(characteristicValueUpdated(QString, QString, QString)), this, SIGNAL(characteristicValueUpdated(QString, QString, QString)));
     connect(serv, SIGNAL(descriptorValueUpdated(QString, QString, QString)), this, SIGNAL(descriptorValueUpdated(QString, QString, QString)));
 

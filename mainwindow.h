@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "devicemanagement.h"
 #include "bleserviceviewer.h"
+#include "collectdata.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,5 +24,6 @@ private:
 public:
     DeviceManagement* device_management;
     BleServiceViewer* ble_service_viewer;
+    CollectData *collect_data;
 };
 #endif // MAINWINDOW_H
