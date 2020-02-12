@@ -2,6 +2,11 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSpacerItem>
+#include <QDateTime>
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
+#include <QtEndian>
 
 /*
  * 1. BLE description을 써서 notify on이 되면,
@@ -87,11 +92,15 @@ CollectData::CollectData(QWidget *parent) : QWidget(parent)
     layout->addSpacerItem(spacer);
 
     setLayout(layout);
+
+    sem_record.release();
+    recording = false;
 }
 
 CollectData::~CollectData()
 {
-
+    filename_map.clear();
+    sequence_map.clear();
 }
 
 void CollectData::BleDataHandle(QString device_address, QString service_uuid, QString characteristic_uuid, QByteArray value)
@@ -100,12 +109,82 @@ void CollectData::BleDataHandle(QString device_address, QString service_uuid, QS
 
     if(characteristic_uuid == "ef680406-9b35-4933-9b10-52ffa9740042")
     {
+        qint16 accel_val[3];
+        qint16 gyro_val[3];
+        qint16 compass_val[3];
+
         for(int i=0; i<3; i++)
         {
-            accel_value[i]->setText(value.mid(i*2, 2).toHex());         //0 2 4
-            gyro_value[i]->setText(value.mid(i*2+6, 2).toHex());        //6 8 10
-            compass_value[i]->setText(value.mid(i*2+12, 2).toHex());    //12 14 16
+            accel_val[i] = qFromLittleEndian<qint16>(value.mid(i*2, 2).data());         //0 2 4
+            gyro_val[i] = qFromLittleEndian<qint16>(value.mid(i*2+6, 2).data());        //6 8 10
+            compass_val[i] = qFromLittleEndian<qint16>(value.mid(i*2+12, 2).data());    //12 14 16
+
+            accel_value[i]->setText(QString::number(accel_val[i]));
+            gyro_value[i]->setText(QString::number(gyro_val[i]));
+            compass_value[i]->setText(QString::number(compass_val[i]));
+
+            //qDebug() << QString("accel_%1 = ").arg(i) <<  value.mid(i*2, 2) << " (" << qFromLittleEndian<qint16>(value.mid(i*2, 2).data()) << ")";
         }
+
+        //0xEF680406-9B35-4933-9B10-52FFA9740042
+        //f8 ff f2   ff dc 03   ff ff fe   ff fd ff 000000000000
+
+        sem_record.acquire();
+        if(recording)
+        {
+            sem_record.release();
+
+            QString filename = filename_map[device_address];
+            quint64 sequence = sequence_map[device_address];
+            sequence_map[device_address]++;
+
+            QString text = QString("%1,%2,%3,%4,%5,%6,%7\n").arg(sequence)\
+                                                            .arg(accel_val[0]).arg(accel_val[1]).arg(accel_val[2])\
+                                                            .arg(gyro_val[0]).arg(gyro_val[1]).arg(gyro_val[2]);
+            SaveFile(filename, text);
+        }
+        else
+            sem_record.release();
     }
 }
 
+void CollectData::Record(QString address, bool start)
+{
+    if(start)
+    {
+        QString date = QDateTime::currentDateTime().toString("yyMMdd_hhmmss");
+        QString filename = date + QString(".csv");
+        QString header("sequence,AccelerometerX,AccelerometerY,AccelerometerZ,GyroscopeX,GyroscopeY,GyroscopeZ\n");
+
+        SaveFile(filename, header, true);
+
+        filename_map.insert(address, filename);
+        sequence_map.insert(address, 0);
+
+        sem_record.acquire();
+        recording = true;
+        sem_record.release();
+    }
+    else
+    {
+        sem_record.acquire();
+        recording = false;
+        sem_record.release();
+
+        filename_map.remove(address);
+        sequence_map.remove(address);
+    }
+}
+
+int CollectData::SaveFile(QString filename, QString text, bool create)
+{
+    QFile file(filename);
+    if (!file.open((create ? QIODevice::WriteOnly : QIODevice::Append) | QIODevice::Text))
+        return -1;
+
+    QTextStream out(&file);
+    out << text;
+
+    file.close();
+    return 0;
+}

@@ -24,6 +24,9 @@ public:
     void SetBleServiceViewer(BleServiceViewer *viewer);
     void SetDataHandler(CollectData *handler);
 
+public slots:
+    void DataRecord(bool start);
+
 private slots:
 
     //for group push buttons
@@ -59,7 +62,7 @@ private slots:
     void SelectDevice(QModelIndexList row_indexes);
 
     //for ble service view
-    void ToggleMotionDescriptor();
+    void ToggleMotionDescriptor(bool disable=false);
     void ScanBleCharacteristics();
 
 private:
@@ -73,8 +76,9 @@ private:
     BleServiceViewer *ble_service_viewer;
     CollectData *data_handler;
 
-    DeviceGroupItem *item;
+    //DeviceGroupItem *item;
     bool motion_notify;
+    bool record_start;
 };
 
 #endif // DEVICEMANAGEMENT_H

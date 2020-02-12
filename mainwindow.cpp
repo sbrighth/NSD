@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->dock_layout->addWidget(device_management);
     ui->tabWidget->addTab(ble_service_viewer, "ble_service");
     ui->tabWidget->addTab(collect_data, "data");
+
+    ui->record->setCheckable(true);
+    connect(ui->record, &QPushButton::clicked, device_management, &DeviceManagement::DataRecord);
 }
 
 MainWindow::~MainWindow()

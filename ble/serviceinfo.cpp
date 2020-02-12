@@ -171,12 +171,12 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
         // in case the service discovery failed
         // We have to queue the signal up to give UI time to even enter
         // the above mode
-        if (newState != QLowEnergyService::DiscoveringServices) {
-            QMetaObject::invokeMethod(this, "characteristicListUpdated",
-                                      Qt::QueuedConnection,
-                                      Q_ARG(QString, device_address),
-                                      Q_ARG(QString, getUuid()));
-        }
+//        if (newState != QLowEnergyService::DiscoveringServices) {
+//            QMetaObject::invokeMethod(this, "characteristicListUpdated",
+//                                      Qt::QueuedConnection,
+//                                      Q_ARG(QString, device_address),
+//                                      Q_ARG(QString, getUuid()));
+//        }
         return;
     }
 
@@ -198,7 +198,7 @@ void ServiceInfo::serviceDetailsDiscovered(QLowEnergyService::ServiceState newSt
 
 void ServiceInfo::characteristicChanged(const QLowEnergyCharacteristic &info, const QByteArray &value)
 {
-    qDebug() << __func__ << " " << value.toHex();
+    //qDebug() << __func__ << " " << value.toHex();
     emit characteristicValueChanged(device_address, getUuid(), CharacteristicInfo(info).getUuid(), value);
 }
 

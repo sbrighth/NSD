@@ -62,6 +62,7 @@ DeviceInfo::DeviceInfo(const QBluetoothDeviceInfo &d)
 
 DeviceInfo::~DeviceInfo()
 {
+    disconnectFromDevice();
     qDeleteAll(services);
     services.clear();
     services_map.clear();
@@ -151,7 +152,12 @@ void DeviceInfo::disconnectFromDevice()
     if(controller)
     {
         if (controller->state() != QLowEnergyController::UnconnectedState)
+        {
             controller->disconnectFromDevice();
+            delete controller;
+            controller = nullptr;
+            connected = false;
+        }
         else
             deviceDisconnected();
     }

@@ -3,6 +3,7 @@
 #include "ble/bledevice.h"
 #include <QDebug>
 #include <QProcess>
+#include <QThread>
 
 DeviceManagement::DeviceManagement(QWidget *parent) :
     QWidget(parent),
@@ -12,6 +13,7 @@ DeviceManagement::DeviceManagement(QWidget *parent) :
     ble_service_viewer = Q_NULLPTR;
     data_handler = Q_NULLPTR;
     motion_notify = false;
+    record_start = false;
 
     // device group
     device_group_model = new QStandardItemModel(0, 4, this);
@@ -32,9 +34,11 @@ DeviceManagement::DeviceManagement(QWidget *parent) :
     connect(ui->group_remove, SIGNAL(clicked()), this, SLOT(RemoveGroup()));
 
     // device list
-    device_list_model = new QStandardItemModel(0, 2, this);
+    device_list_model = new QStandardItemModel(0, 4, this);
     device_list_model->setHeaderData(0, Qt::Horizontal, QObject::tr("name"));
     device_list_model->setHeaderData(1, Qt::Horizontal, QObject::tr("address"));
+    device_list_model->setHeaderData(2, Qt::Horizontal, QObject::tr("connection"));
+    device_list_model->setHeaderData(3, Qt::Horizontal, QObject::tr("scan"));
 
     ui->device_list->setRootIsDecorated(false);
     ui->device_list->setAlternatingRowColors(true);
@@ -126,7 +130,17 @@ void DeviceManagement::DisconnectDevice()
         return;
 
     if(GetCurrentDeviceGroupConnectMode() == "BLE")
+    {
+        //disable motion before disconnection.
+        if(motion_notify)
+        {
+            ToggleMotionDescriptor(true);
+            //wait for completion of motion descriptor write
+            QThread::sleep(1);
+        }
+
         ble_device->disconnectDevice(address);
+    }
 }
 
 void DeviceManagement::RemoveDevice()
@@ -142,21 +156,26 @@ void DeviceManagement::RemoveDevice()
     device_list_model->removeRow(row_index);
 }
 
-void DeviceManagement::ToggleMotionDescriptor()
+void DeviceManagement::ToggleMotionDescriptor(bool disable)
 {
     // this is temp code. later we have to check device is connected and service is discovered
 
     int row_index = ui->device_list->currentIndex().row();
     QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
+    bool connection = device_list_model->data(device_list_model->index(row_index, 2)).toBool();
+    bool scan = device_list_model->data(device_list_model->index(row_index, 3)).toBool();
     QString service_uuid = "ef680400-9b35-4933-9b10-52ffa9740042";
     QString characteristic_uuid = "ef680406-9b35-4933-9b10-52ffa9740042";
     QString descriptor_uuid = "0x2902";
+
+    if(!connection || !scan)
+        return;
 
     QStringList uuid;
     uuid << service_uuid << characteristic_uuid << descriptor_uuid;
 
     QByteArray value;
-    if(motion_notify == true)
+    if(motion_notify || disable)
     {
         value = QByteArray::fromHex("0000");
         motion_notify = false;
@@ -173,7 +192,12 @@ void DeviceManagement::ToggleMotionDescriptor()
 void DeviceManagement::ScanBleCharacteristics()
 {
     int row_index = ui->device_list->currentIndex().row();
+    bool connection = device_list_model->data(device_list_model->index(row_index, 2)).toBool();
+    if(!connection)
+        return;
+
     QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
+    device_list_model->setData(device_list_model->index(row_index, 3), false);  //scan initialize
     QProcess::execute("CLS");
 
     ble_device->scanCharacteristics(address);
@@ -268,6 +292,19 @@ void DeviceManagement::ChangeBleState()
 void DeviceManagement::DisconnectBleDevice(QString device_address)
 {
     qDebug() << "device disconnected : " << device_address;
+
+    QList<QStandardItem *>items = device_list_model->findItems(device_address, Qt::MatchExactly, 1);
+    Q_ASSERT(items.count() == 1);
+
+    for(auto item: items)
+    {
+        int row_index = item->row();
+        if(device_list_model->data(device_list_model->index(row_index, 1)) == device_address)
+        {
+            device_list_model->setData(device_list_model->index(row_index, 2), false);
+            device_list_model->setData(device_list_model->index(row_index, 3), false);
+        }
+    }
 }
 
 void DeviceManagement::UpdateBleServiceList(QString device_address)
@@ -293,6 +330,18 @@ void DeviceManagement::SortBleServiceList(QString device_address)
 {
     Q_UNUSED(device_address);
     ble_service_viewer->SortService();
+
+    QList<QStandardItem *>items = device_list_model->findItems(device_address, Qt::MatchExactly, 1);
+    Q_ASSERT(items.count() == 1);
+
+    for(auto item: items)
+    {
+        int row = item->row();
+        if(device_list_model->data(device_list_model->index(row, 1)) == device_address)
+        {
+            device_list_model->setData(device_list_model->index(row, 2), true);
+        }
+    }
 }
 
 void DeviceManagement::UpdateBleCharacteristicList(QString device_address, QString service_uuid)
@@ -331,6 +380,19 @@ void DeviceManagement::UpdateBleCharacteristicList(QString device_address, QStri
             qDebug() << "descriptor uuid : " << descriptor->getUuid();
             qDebug() << "descriptor value : " << descriptor->getValue();
             qDebug() << "descriptor handle : " << descriptor->getHandle();
+        }
+    }
+
+    QList<QStandardItem *>items = device_list_model->findItems(device_address, Qt::MatchExactly, 1);
+    Q_ASSERT(items.count() == 1);
+
+    for(auto item: items)
+    {
+        int row_index = item->row();
+        if(device_list_model->data(device_list_model->index(row_index, 1)) == device_address &&
+           device_list_model->data(device_list_model->index(row_index, 3)) == false)
+        {
+            device_list_model->setData(device_list_model->index(row_index, 3), true);
         }
     }
 }
@@ -389,6 +451,8 @@ void DeviceManagement::SelectDevice(QModelIndexList row_indexes)
         device_list_model->insertRow(row);
         device_list_model->setData(device_list_model->index(row, 0), name);
         device_list_model->setData(device_list_model->index(row, 1), address);
+        device_list_model->setData(device_list_model->index(row, 2), false);
+        device_list_model->setData(device_list_model->index(row, 3), false);
         row++;
     }
 
@@ -429,4 +493,17 @@ void DeviceManagement::SetDataHandler(CollectData *handler)
     data_handler = handler;
 
     connect(ble_device, SIGNAL(characteristicValueChanged(QString, QString, QString, QByteArray)), data_handler, SLOT(BleDataHandle(QString, QString, QString, QByteArray)));
+}
+
+void DeviceManagement::DataRecord(bool start)
+{
+    record_start = !record_start;
+
+    int row_index = ui->device_list->currentIndex().row();
+    QString address = device_list_model->data(device_list_model->index(row_index, 1)).toString();
+    bool connect = device_list_model->data(device_list_model->index(row_index, 2)).toBool();
+    bool scan = device_list_model->data(device_list_model->index(row_index, 3)).toBool();
+
+    if(connect && scan)
+        data_handler->Record(address, start);
 }
