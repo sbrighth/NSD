@@ -155,8 +155,13 @@ void BleDevice::deviceScanFinished()
     for (auto nextDevice : foundDevices)
         if (nextDevice.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
         {
-            if(!nextDevice.name().startsWith("Thingy") && !nextDevice.name().startsWith("ELA"))
-                    continue;
+            // accept only specific name
+            if(!nextDevice.name().startsWith("Thingy", Qt::CaseInsensitive) && !nextDevice.name().startsWith("ELA", Qt::CaseInsensitive) && !nextDevice.name().startsWith("NS", Qt::CaseInsensitive))
+                continue;
+
+            // signal strength 0 sip
+            if(nextDevice.rssi() == 0)
+                continue;
 
             auto *new_device = new DeviceInfo(nextDevice);
             devices.append(new_device);
